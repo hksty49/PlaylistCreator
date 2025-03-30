@@ -75,15 +75,3 @@ def create_playlist(songs_dict, playlist_name, description):
         print(f"プレイリスト '{playlist_name}' に曲を追加しました。")
     else:
         print("追加する曲がありませんでした。")
-
-if __name__ == "__main__":
-    # サンプルの曲情報
-    sample_songs = {
-        1: ("Revolution", "coldrain"),
-        2: ("Gone", "coldrain"),
-        3: ("The Side Effects", "coldrain")
-    }
-    sample_playlist_name = "My Favorite Songs"
-    sample_description = "This playlist was created using Spotify API."
-
-    create_playlist(sample_songs, sample_playlist_name, sample_description)
