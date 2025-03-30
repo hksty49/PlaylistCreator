@@ -44,7 +44,52 @@ def add_songs_to_playlist(playlist_id, uris):
     """プレイリストに曲を追加する"""
     spotify.playlist_add_items(playlist_id, uris)
 
-def create_playlist(songs_dict, playlist_name, description):
+
+def generate_playlist_name(event_details):
+    """
+    プレイリスト名を生成する関数。
+
+    Args:
+        event_details (dict): イベントの詳細情報を格納した辞書。
+    
+    Returns:
+        str: 生成されたプレイリスト名。
+    """
+    # 日付の取得
+    day_from = event_details.get("day_from", "").zfill(2)
+    day_to = event_details.get("day_to", "").zfill(2)
+
+    if day_to != "00":
+        day = f"{day_from} - {day_to}"
+    else:
+        day = day_from
+    
+    year = event_details.get("year", "")
+    month = event_details.get("month", "")
+    event = event_details.get("event", "")
+
+    return f"{year}.{month}.{day} {event}"
+
+def generate_playlist_description(event_details):
+    """
+    プレイリストの説明を生成する関数。
+
+    Args:
+        event_details (dict): イベントの詳細情報を格納した辞書。
+    
+    Returns:
+        str: 生成されたプレイリストの説明。
+    """
+    artist = event_details.get("artist", "")
+    with_artist = event_details.get("with_artist", "")
+    if with_artist != "":
+        artist = f"{artist} × {with_artist}"  # 全角の「×」を使用
+
+    place = event_details.get("place", "")
+
+    return f"{artist} @ {place}"
+
+def create_playlist(setlist, event_details):
     """
     プレイリストを作成し、Dictionary型の曲情報に基づいて曲を追加する。
 
@@ -56,18 +101,21 @@ def create_playlist(songs_dict, playlist_name, description):
     # Spotify API認証
     authenticate_spotify()
 
+    playlist_name = generate_playlist_name(event_details)
+    playlist_description = generate_playlist_description(event_details)
+
     # プレイリストを作成
-    playlist = spotify.user_playlist_create(USER_NAME, playlist_name, description=description)
+    playlist = spotify.user_playlist_create(USER_NAME, playlist_name, description=playlist_description)
 
     # 曲を検索してプレイリストに追加
     uris = []
-    for order, (track_name, artist_name) in songs_dict.items():
-        search_key = f"{track_name} {artist_name}"
+    for order, (track, artist) in setlist.items():
+        search_key = f"{track} {artist}"
         results = search_songs(search_key, 1)
         if results['tracks']['items']:
             uris.append(results['tracks']['items'][0]['uri'])
         else:
-            print(f"曲が見つかりませんでした: {track_name} by {artist_name}")
+            print(f"曲が見つかりませんでした: {track} by {artist}")
 
     # プレイリストに曲を追加
     if uris:

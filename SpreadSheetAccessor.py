@@ -8,14 +8,11 @@ def get_event_details():
     """
     スプレッドシートからイベントの詳細情報を取得する関数。
 
-    Args:
-        worksheet: gspreadのワークシートオブジェクト
-
     Returns:
         dict: イベントの詳細情報を格納した辞書
     """
     # データを一括取得
-    cell_ranges = ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9']
+    cell_ranges = ['B2', 'B3', 'B4', 'B5', 'B7', 'B8', 'B9', 'B10']
     global worksheet  # グローバル変数を使用
     cells = worksheet.batch_get(cell_ranges)
 
@@ -36,32 +33,34 @@ def get_event_details():
 
     return event_details
 
-# 曲順、曲名、アーティスト名を取得し辞書型に変換
 def get_setlist():
+    """
+    曲順、曲名、アーティスト名を取得し辞書型に変換する関数。
+
+    Returns:
+        dict: セットリスト
+    """
     global worksheet  # グローバル変数を使用
     all_data = worksheet.get_all_values()
 
     # 12行目以降を取得（0インデックスなので11から）
-    playlist_data = []
-    for row in all_data[11:]:
+    setlist = {}
+    for row in all_data[12:]:
         if len(row) < 3:  # A, B, C列が不足している場合は終了
             break
-        track_number = row[0].strip() if row[0] else None
-        track_name = row[1].strip() if row[1] else None
-        artist_name = row[2].strip() if row[2] else None
+        number = row[0].strip() if row[0] else None
+        track = row[1].strip() if row[1] else None
+        artist = row[2].strip() if row[2] else None
 
         # 曲名またはアーティスト名が空の場合、終了
-        if not track_name or not artist_name:
+        if not track or not artist:
             break
 
-        # 辞書型データとして追加
-        playlist_data.append({
-            "track_number": track_number,
-            "track_name": track_name,
-            "artist_name": artist_name
-        })
+        # 曲順をキーにして辞書に追加
+        if number:
+            setlist[number] = (track, artist)
 
-    return playlist_data
+    return setlist
 
 def access_spreadsheet():
     """
@@ -84,4 +83,5 @@ def access_spreadsheet():
     # スプレッドシートにアクセス
     spreadsheet_name = 'Setlist'
     spreadsheet = gc.open(spreadsheet_name)
+    global worksheet  # グローバル変数を使用
     worksheet = spreadsheet.worksheet('Setlist')
